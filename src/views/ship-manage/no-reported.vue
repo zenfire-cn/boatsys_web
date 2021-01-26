@@ -69,9 +69,16 @@
         @change="handleTableChange"
         alert="true"
       >
-        <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
-          电话：{{ record.owner_phone }}
-        </p>
+        <a-table
+          slot="expandedRowRender"
+          slot-scope="record"
+          :columns="innerColumns"
+          :data-source="record.baseInfo"
+          :pagination="false"
+          @change="handleTableChange"
+        >
+        </a-table>
+
         <span slot="action" slot-scope="text, record">
           <template>
             <a @click="handleEdit(record)">查看</a>
@@ -90,29 +97,41 @@ const columns = [
   {
     title: 'ID',
     dataIndex: 'device_id',
+    align: 'center',
     scopedSlots: { customRender: 'device_id' }
   },
   {
     title: '船名',
+    align: 'center',
     dataIndex: 'boat_name'
   },
   {
     title: '主管部门',
+    align: 'center',
     dataIndex: 'competent_department',
     scopedSlots: { customRender: 'competent_department' }
   },
   {
     title: '船主',
+    align: 'center',
     dataIndex: 'owner_name',
     sorter: false,
     needTotal: false
     // customRender: text => text + ' 次'
   },
+      {
+    title: '联系电话',
+    align: 'center',
+    dataIndex: 'owner_phone',
+    sorter: false
+  },
   {
     title: '离岗时间',
+    align: 'center',
     dataIndex: 'departure_time',
-    sorter: true
+    sorter: false
   }
+
   // {
   //   title: '操作',
   //   dataIndex: 'action',
@@ -120,9 +139,32 @@ const columns = [
   //   scopedSlots: { customRender: 'action' }
   // }
 ]
+const innerColumns = [
+  {
+    title: '经度',
+    align: 'center',
+    dataIndex: 'latitude'
+  },
+    {
+    title: '纬度',
+    align: 'center',
+    dataIndex: 'longitude'
+  },
+  {
+    title: '航向',
+    align: 'center',
+    dataIndex: 'course'
+  },
+  {
+    title: '航速',
+    align: 'center',
+    dataIndex: 'speed'
+  }
+]
 export default {
   data () {
     this.columns = columns
+    this.innerColumns = innerColumns
     return {
       advanced: false, // 高级搜索 展开/关闭
       loadData: [],
@@ -202,6 +244,15 @@ export default {
         this.pagination.total = res.data.count
         this.queryParam.page = res.data.page
         this.pagination.current = res.data.page
+        for (let n = 0; n < res.data.data.length; n++) {
+          res.data.data[n].baseInfo = []
+          res.data.data[n].baseInfo.push({ longitude: res.data.data[n].longitude,
+          latitude: res.data.data[n].latitude,
+          speed: res.data.data[n].speed + 'km/h',
+          course: res.data.data[n].course + '°' })
+          // res.data.data[n].baseInfo.speed = res.data.data[n].speed
+          // res.data.data[n].baseInfo.course = res.data.data[n].course
+        }
         this.loadData = res.data
       })
     },

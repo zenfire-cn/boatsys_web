@@ -90,9 +90,15 @@
         <span slot="status" slot-scope="text">
           <a-badge :status="text | statusTypeFilter" :text="text | statusFilter" />
         </span>
-        <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
-          经纬度：（{{ record.lat }},{{ record.lng }}）
-        </p>
+        <a-table
+          slot="expandedRowRender"
+          slot-scope="record"
+          :columns="innerColumns"
+          :data-source="record.baseInfo"
+          :pagination="false"
+          @change="handleTableChange"
+        >
+        </a-table>
 
         <span slot="action" slot-scope="text, record">
           <template>
@@ -177,6 +183,28 @@ const statusMap = {
     text: 'Ⅳ级'
   }
 }
+const innerColumns = [
+  {
+    title: '经度',
+    align: 'center',
+    dataIndex: 'latitude'
+  },
+    {
+    title: '纬度',
+    align: 'center',
+    dataIndex: 'longitude'
+  },
+  {
+    title: '航向',
+    align: 'center',
+    dataIndex: 'course'
+  },
+  {
+    title: '航速',
+    align: 'center',
+    dataIndex: 'speed'
+  }
+]
 export default {
   components: {
     Info
@@ -191,6 +219,7 @@ export default {
   },
   data () {
     this.columns = columns
+    this.innerColumns = innerColumns
     return {
       status: 'all',
       advanced: false, // 高级搜索 展开/关闭
@@ -288,6 +317,16 @@ export default {
         this.queryParam.page = res.data.page
         this.pagination.current = res.data.page
         this.record_count = res.data.record_count
+        for (let n = 0; n < res.data.data.length; n++) {
+          res.data.data[n].baseInfo = []
+          res.data.data[n].baseInfo.push({ longitude: res.data.data[n].lng,
+          latitude: res.data.data[n].lat,
+          speed: res.data.data[n].speed + 'km/h',
+          course: res.data.data[n].course + '°' })
+          // res.data.data[n].baseInfo.speed = res.data.data[n].speed
+          // res.data.data[n].baseInfo.course = res.data.data[n].course
+        }
+        console.log(res.data.data)
         this.loadData = res.data
         this.fenceList = res.data.fence
       })

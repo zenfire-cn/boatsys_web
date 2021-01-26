@@ -87,9 +87,18 @@
         <!-- <span slot="status" slot-scope="text">
           <a-badge :status="text | statusTypeFilter" :text="text | statusFilter" />
         </span> -->
-        <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
+        <!-- <p slot="expandedRowRender" slot-scope="record" style="margin: 0">
           实时经纬度：（{{ record.lat }},{{ record.lng }}）
-        </p>
+        </p> -->
+        <a-table
+          slot="expandedRowRender"
+          slot-scope="record"
+          :columns="innerColumns"
+          :data-source="record.baseInfo"
+          :pagination="false"
+          @change="handleTableChange"
+        >
+        </a-table>
         <span slot="action" slot-scope="text, record">
           <template>
             <a @click="handleEdit(record)">查看</a>
@@ -146,6 +155,28 @@ const columns = [
   //   scopedSlots: { customRender: 'action' }
   // }
 ]
+const innerColumns = [
+  {
+    title: '经度',
+    align: 'center',
+    dataIndex: 'latitude'
+  },
+    {
+    title: '纬度',
+    align: 'center',
+    dataIndex: 'longitude'
+  },
+  {
+    title: '航向',
+    align: 'center',
+    dataIndex: 'course'
+  },
+  {
+    title: '航速',
+    align: 'center',
+    dataIndex: 'speed'
+  }
+]
 export default {
   components: {
     STable,
@@ -154,6 +185,7 @@ export default {
   },
   data () {
     this.columns = columns
+    this.innerColumns = innerColumns
     return {
       status: 'all',
       advanced: false, // 高级搜索 展开/关闭
@@ -217,6 +249,15 @@ export default {
         limit: _this.limit,
         page: _this.queryParam.page
       }).then((res) => {
+        for (let n = 0; n < res.data.data.length; n++) {
+          res.data.data[n].baseInfo = []
+          res.data.data[n].baseInfo.push({ longitude: res.data.data[n].lng,
+          latitude: res.data.data[n].lat,
+          speed: res.data.data[n].speed + 'km/h',
+          course: res.data.data[n].course + '°' })
+          // res.data.data[n].baseInfo.speed = res.data.data[n].speed
+          // res.data.data[n].baseInfo.course = res.data.data[n].course
+        }
           _this.loadData = res.data
           _this.record_count = res.data.record_count
           _this.pagination.total = res.data.count

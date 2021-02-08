@@ -35,7 +35,10 @@ const constantRouterComponents = {
   'user-manage': () => import('@/views/system-manage/user-manage'), // 用户管理
   'role-manage': () => import('@/views/system-manage/role-manage'), // 角色管理
   // 港口管理
-  'harbour': () => import('@/views/harbour-manage/harbour'),
+  'harbour-manage': () => import('@/views/harbour-manage/harbour'),
+  // 违规记录
+  'ship_illegally': () => import('@/views/ship-manage/crimina-records'),
+  'area-manage': () => import('@/views/system-manage/area-manage'),
   // 'no-reported': () => import('@/views/ship-manage/no-reported'),
   // form
   // 'BasicForm': () => import('@/views/form/basicForm'),

@@ -3,7 +3,7 @@
     <a-card :bordered="false">
       <div class="model-pop">
         <a-form :form="form" :label-col="{ span: 5 }" :wrapper-col="{ span: 12 }">
-          <a-form-item label="主管部门">
+          <!-- <a-form-item label="主管部门">
             <a-tree-select
               style="width: 100%"
               :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
@@ -35,22 +35,33 @@
                 </a-tree-select-node>
               </a-tree-select-node>
             </a-tree-select>
+          </a-form-item> -->
+          <a-form-item label="选择港口">
+            <a-select style="width: 100%" placeholder="请选择" @change="habourChange" v-model="habourId">
+              <a-select-option :value="levelItem.id" v-for="(levelItem, levelIndex) in habourList" :key="levelIndex">{{
+                levelItem.name
+              }}</a-select-option>
+            </a-select>
           </a-form-item>
-          <a-form-item label="港口名称">
+          <a-form-item label="区域名称">
             <a-input
-              placeholder="请输入港口名称"
-              v-decorator="['fenceName', { rules: [{ required: true, message: '请填写围栏名称' }] }]"
+              placeholder="请输入区域名称"
+              v-decorator="['areaName', { rules: [{ required: false, message: '请填写区域名称' }] }]"
             />
           </a-form-item>
-          <a-form-item label="港口位置">
+          <a-form-item label="选择区域范围">
+            <a-select style="width: 100%" placeholder="请选择" @change="rangeChange" v-model="range">
+              <a-select-option :value="levelItem.id" v-for="(levelItem, levelIndex) in rangeList" :key="levelIndex">{{
+                levelItem.name + '米'
+              }}</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item label="是否开启短信通知">
+            <a-switch :checked="isOpenSms==1?true:false" @change="contactChange($event)"/>
+          </a-form-item>
+          <!-- <a-form-item label="港口位置">
             <a-input placeholder="请输入港口地址" v-model="city" id="suggestId" name="address_detail"></a-input>
-          </a-form-item>
-          <a-form-item label="联系人姓名">
-            <a-input placeholder="请输入姓名" v-model="contactName" id="suggestId" name="address_detail"></a-input>
-          </a-form-item>
-          <a-form-item label="联系人电话">
-            <a-input placeholder="请输入电话" v-model="contactPhone" id="suggestId" name="address_detail"></a-input>
-          </a-form-item>
+          </a-form-item> -->
           <div id="allmap" />
           <a-form-item :wrapper-col="{ span: 12, offset: 5 }">
             <a-button type="primary" html-type="submit" @click="commitResult">
@@ -66,7 +77,7 @@
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
 import { getAllDep } from '@/api/ship-api'
-import { harbourInfo, editHarbour, addHarbour } from '@/api/systemManage-api'
+import { harbourInfo, editHarbour, addHarbour, getAllHarbour, addArea} from '@/api/systemManage-api'
 import { BmGeolocation, BmLocalSearch, BmNavigation, BmMarker } from 'vue-baidu-map'
 import moment from 'moment'
 export default {
@@ -92,12 +103,48 @@ export default {
       address_detail: null, //详细地址
       defaultZoom: 10,
       userlocation: [],
-      contactName:'',
-      contactPhone:'',
-      myGeo:null
+      myGeo: null,
+      rangeList: [
+        {
+          id: 50,
+          name: 50,
+          value:50
+        },
+        {
+          id: 100,
+          name: 100,
+          value: 100
+        },
+        {
+          id: 150,
+          name: 150,
+          value: 150
+
+        },
+        {
+          id: 200,
+          name: 200,
+          value: 200
+        },
+        {
+          id: 250,
+          name: 250,
+          value: 250
+        },
+        {
+          id: 300,
+          name: 300,
+          value: 300
+        }
+      ],
+
+      range: 50,
+      habourList:[],
+      habourId:undefined,
+      isOpenSms:0
     }
   },
-    components: {
+  components: {
     // 手动定位控件
     BmGeolocation,
     // 检索控件
@@ -112,7 +159,7 @@ export default {
     // 获取基础信息
     getBaseContent() {
       const _this = this
-      harbourInfo('/harbour/edit/' + this.id).then(res => {
+      harbourInfo('/area/editArea/' + this.id).then(res => {
         _this.addressLng = { lat: res.data.lat, lng: res.data.lng }
         _this.getcity(_this.addressLng)
         //  _this.city = res.data.address
@@ -120,10 +167,12 @@ export default {
           _this.city = res.data.address
         }, 200)
         _this.defaultZoom = 17
-        _this.contactName = res.data.contact_name
-        _this.contactPhone = res.data.contact_phone
+        _this.habourId = res.data.harbour_id
+        _this.range = res.data.range
+        _this.isOpenSms = res.data.sms
         _this.form.setFieldsValue({
-          fenceName: res.data.name,
+          areaName: res.data.name,
+
           competentDep: res.data.department
         })
       })
@@ -137,26 +186,22 @@ export default {
     commitResult() {
       const _this = this
       console.log(this.form.getFieldsValue().competentDep)
-      if (this.form.getFieldsValue().competentDep === undefined) {
-        this.$message.warning('请选择主管部门')
+      if (this.habourId === undefined) {
+        this.$message.warning('请选择港口')
         return
-      } else if (this.form.getFieldsValue().fenceName === undefined) {
+      } else if (this.form.getFieldsValue().areaName === undefined) {
         this.$message.warning('请填写港口名称')
         return
-      } else if (this.city === '') {
-        this.$message.warning('请选择港口位置')
-        return
-      } else {
+      }else {
         if (this.openType === 1) {
-          editHarbour({
+          addArea({
             id: this.id,
-            name: this.form.getFieldsValue().fenceName,
-            address: this.city,
-            department_id: this.form.getFieldsValue().competentDep,
+            name: this.form.getFieldsValue().areaName,
+            range: this.range,
+            sms: this.isOpenSms,
             lat: this.addressLng.lat,
             lng: this.addressLng.lng,
-            contact_name:this.contactName,
-            contact_phone:this.contactPhone
+            harbour_id:this.habourId
           }).then(res => {
             if (res.status === 200) {
               _this.$message.success('修改成功')
@@ -167,14 +212,13 @@ export default {
             }
           })
         } else {
-          addHarbour({
-            name: this.form.getFieldsValue().fenceName,
-            address: this.city,
-            department_id: this.form.getFieldsValue().competentDep,
+          addArea({
+            name: this.form.getFieldsValue().areaName,
+            range: this.range,
+            sms: this.isOpenSms,
             lat: this.addressLng.lat,
             lng: this.addressLng.lng,
-            contact_name:this.contactName,
-            contact_phone:this.contactPhone
+            harbour_id:this.habourId
           }).then(res => {
             if (res.status === 200) {
               _this.$message.success('新建成功')
@@ -193,26 +237,26 @@ export default {
         // 创建Map实例
         var map = new BMap.Map('allmap')
         // 初始化地图,设置中心点坐标，
-        var point = new BMap.Point(addressLng.lng, addressLng.lat) // 创建点坐标，汉得公司的经纬度坐标
+        var point = new BMap.Point(addressLng.lng, addressLng.lat) // 创建点坐标，
         map.centerAndZoom(point, th.defaultZoom)
         map.enableScrollWheelZoom()
         if (th.openType === 1) {
           map.addOverlay(new BMap.Marker(addressLng))
         }
-        var ac = new BMap.Autocomplete({
-          // 建立一个自动完成的对象
-          input: 'suggestId',
-          location: map
-        })
+        // var ac = new BMap.Autocomplete({
+        //   // 建立一个自动完成的对象
+        //   input: 'suggestId',
+        //   location: map
+        // })
         var myValue
-        ac.addEventListener('onconfirm', function(e) {
-          // 鼠标点击下拉列表后的事件
-          var _value = e.item.value //获取点击的条目
-          myValue = _value.province + _value.city + _value.district + _value.street + _value.business //地址拼接赋给一个变量
-          th.city = myValue //将地址赋给data中的city
-          // console.log(th.city)
-          setPlace()
-        })
+        // ac.addEventListener('onconfirm', function(e) {
+        //   // 鼠标点击下拉列表后的事件
+        //   var _value = e.item.value //获取点击的条目
+        //   myValue = _value.province + _value.city + _value.district + _value.street + _value.business //地址拼接赋给一个变量
+        //   th.city = myValue //将地址赋给data中的city
+        //   // console.log(th.city)
+        //   setPlace()
+        // })
         function setPlace() {
           map.clearOverlays() // 清除地图上所有覆盖物
           function myFun() {
@@ -236,26 +280,36 @@ export default {
             console.log(th.userlocation.lat)
           })
         }
-                map.addEventListener('click', function(e) {
+        map.addEventListener('click', function(e) {
           map.clearOverlays() // 清除地图上所有覆盖物
-          map.addOverlay(new BMap.Marker(e.Ag))
+          map.addOverlay(new BMap.Marker(e.Ag)) // 添加标注
           th.myGeo.getLocation(e.Ag, function(result) {
-            console.log(result)
-            th.city = result.address
             th.addressLng.lat = result.point.lat
             th.addressLng.lng = result.point.lng
           })
         })
       })
+    },
+    rangeChange(value) {
+      this.range = value
+    },
+    habourChange (value) {
+      this.habourId = value
+    },
+            // 联络人设置
+    contactChange (checked) {
+      this.isOpenSms = checked?1:0
     }
   },
   created() {
-        this.myGeo = new BMap.Geocoder()
+    this.myGeo = new BMap.Geocoder()
     const _this = this
     getAllDep().then(res => {
       this.cascaderList = res.data
     })
-
+    getAllHarbour().then((res) => {
+          this.habourList = res.data
+      })
     // 获取基础数据
     if (this.openType === 1) {
       this.getBaseContent()

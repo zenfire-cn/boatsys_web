@@ -438,8 +438,16 @@ const user = {
         }).finally(() => {
         })
       })
+    },
+    // 登出
+    Logout2 ({ commit, state }) {
+      return new Promise((resolve) => {
+          commit('SET_TOKEN', '')
+          commit('SET_ROLES', [])
+          storage.remove(ACCESS_TOKEN)
+          resolve()
+      })
     }
-
   }
 }
 

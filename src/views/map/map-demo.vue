@@ -97,9 +97,9 @@
         cancelText="取消"
       >
         <span>开始时间：</span>
-        <a-date-picker v-model="startTime" @change="startTimeChange" />
+        <a-date-picker v-model="startTime" @change="startTimeChange" placeholder="请选择" />
         <span style="margin-left:20px">结束时间：</span>
-        <a-date-picker v-model="endTime" @change="endTimeChange" />
+        <a-date-picker v-model="endTime" @change="endTimeChange" placeholder="请选择"/>
       </a-modal>
     </div>
   </div>
@@ -176,8 +176,8 @@ export default {
       visible: false, // 显示轨迹回放时间选择
       widths: 600,
       confirmLoading: false,
-      startTime: '',
-      endTime: '',
+      startTime: null,
+      endTime: null,
       checkShipId: '',
       greenIcon: null,
       shipRound:null // 选中船只的圈

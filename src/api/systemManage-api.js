@@ -17,7 +17,12 @@ const api = {
     delPer: '/system-manage/del', // 删除角色
     editHarbour: '/harbour/edit', // 修改港口信息
     addHarbour: '/harbour/add', // 新增港口信息
-    delHarbour: '/harbour/del' // 删除港口信息
+    delHarbour: '/harbour/del', // 删除港口信息
+    getAllHarbour: '/area/area-harbour', // 获取所有港口
+    areaList: '/area/area', // 区域列表
+    editSms: '/area/editSms', // 修改短信通知
+    addArea: '/area/addArea', // 修改新增区域信息
+    delArea: '/area/delArea' // 删除区域
 }
 
 export default api
@@ -183,6 +188,46 @@ export function addHarbour (parameter) {
 export function delHarbour (parameter) {
   return request({
     url: api.delHarbour,
+    method: 'post',
+    data: parameter
+  })
+}
+// 获取区域信息
+export function getArea (parameter) {
+  return request({
+    url: api.areaList,
+    method: 'get',
+    params: parameter
+  })
+}
+// 获取港口信息
+export function getAllHarbour (parameter) {
+  return request({
+    url: api.getAllHarbour,
+    method: 'get',
+    params: parameter
+  })
+}
+// 设置短信通知
+export function editSms (parameter) {
+  return request({
+    url: api.editSms,
+    method: 'post',
+    data: parameter
+  })
+}
+// 新增修改区域
+export function addArea (parameter) {
+  return request({
+    url: api.addArea,
+    method: 'post',
+    data: parameter
+  })
+}
+// 新增修改区域
+export function delArea (parameter) {
+  return request({
+    url: api.delArea,
     method: 'post',
     data: parameter
   })

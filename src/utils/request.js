@@ -24,7 +24,7 @@ const errorHandler = (error) => {
         notification.error({
         message: '登录状态失效'
       })
-      store.dispatch('Logout').then(() => {
+      store.dispatch('Logout2').then(() => {
         setTimeout(() => {
           window.location.reload()
         }, 500)

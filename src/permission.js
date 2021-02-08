@@ -47,14 +47,14 @@ router.beforeEach((to, from, next) => {
             })
           })
           .catch(() => {
-            notification.error({
-              message: '错误',
-              description: '用户信息异常，请重新登录'
-            })
+            // notification.error({
+            //   message: '错误',
+            //   description: '用户信息异常，请重新登录'
+            // })
             // 失败时，获取用户信息失败时，调用登出，来清空历史保留信息
-            store.dispatch('Logout').then(() => {
-              next({ path: loginRoutePath, query: { redirect: to.fullPath } })
-            })
+            // store.dispatch('Logout2').then(() => {
+            //   next({ path: loginRoutePath, query: { redirect: to.fullPath } })
+            // })
           })
       } else {
         next()

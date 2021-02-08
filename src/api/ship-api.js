@@ -9,7 +9,8 @@ const api = {
     addShip: '/ship/shipAdd', // 添加船只
     voyageRecord: '/ship/voyage-record', // 获取航次记录
     reportedInfo: '/ship/no-reported', // 未报备出港记录
-    delImg: '/system-manage/qiniu/delImg' // 未报备出港记录
+    delImg: '/system-manage/qiniu/delImg', // 未报备出港记录
+    crimina: '/ship/fail-stop' // 未报备出港记录
 }
 
 export default api
@@ -117,6 +118,13 @@ export function getHabor (parameter) {
 export function exportExcel (url, parameter) {
   return request({
     url: url,
+    method: 'get',
+    params: parameter
+  })
+}
+export function getCriminaList (parameter) {
+  return request({
+    url: api.crimina,
     method: 'get',
     params: parameter
   })

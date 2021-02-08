@@ -175,6 +175,11 @@ const innerColumns = [
     title: '航速',
     align: 'center',
     dataIndex: 'speed'
+  },
+    {
+    title: '电量',
+    align: 'center',
+    dataIndex: 'electricity'
   }
 ]
 export default {
@@ -253,6 +258,7 @@ export default {
           res.data.data[n].baseInfo = []
           res.data.data[n].baseInfo.push({ longitude: res.data.data[n].lng,
           latitude: res.data.data[n].lat,
+          electricity: res.data.data[n].electricity,
           speed: res.data.data[n].speed + 'km/h',
           course: res.data.data[n].course + '°' })
           // res.data.data[n].baseInfo.speed = res.data.data[n].speed

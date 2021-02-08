@@ -111,6 +111,13 @@ const vueConfig = {
         pathRewrite: { '^/api': '' }
       }
     }
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://192.168.50.126:8000/api',
+    //     changeOrigin: true,
+    //     pathRewrite: { '^/api': '' }
+    //   }
+    // }
   },
 
   // disable source map in production

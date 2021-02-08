@@ -2,12 +2,16 @@
   <page-header-wrapper :title="false">
     <a-card :bordered="false" class="ant-pro-components-tag-select" v-if="!isShowModelPop">
       <div class="nav-box">
-        <!-- <div class="input-list">
+        <div class="input-list">
           <div class="input-item">
-            <span class="input-title">围栏名称：</span>
-            <a-input v-model="fenceInput" placeholder="请输入" />
+            <span class="input-title">港口名称：</span>
+            <a-select style="width: 100%" placeholder="请选择" @change="levelChange" v-model="level">
+              <a-select-option :value="levelItem.id" v-for="(levelItem, levelIndex) in levelList" :key="levelIndex">{{
+                levelItem.name
+              }}</a-select-option>
+            </a-select>
           </div>
-          <div class="input-item">
+          <!-- <div class="input-item">
             <span class="input-title">预警等级：</span>
             <a-select style="width: 100%" placeholder="请选择" @change="levelChange" v-model="level">
               <a-select-option :value="levelItem.id" v-for="(levelItem, levelIndex) in levelList" :key="levelIndex">{{
@@ -44,16 +48,16 @@
               <span class="input-title">启用结束时间：</span>
               <a-date-picker @change="returnTimeChange" v-model="endTime" style="width: 100%" placeholder="请选择" />
             </div>
-          </template>
+          </template> -->
         </div>
         <div class="btn-list">
           <a-button type="primary" style="margin-right: 10px" @click="searchBaseContent">查询</a-button>
           <a-button @click="reset">重置</a-button>
-          <a @click="toggleAdvanced" style="margin-left: 8px">
+          <!-- <a @click="toggleAdvanced" style="margin-left: 8px">
             {{ advanced ? '收起' : '展开' }}
             <a-icon :type="advanced ? 'up' : 'down'" />
-          </a>
-        </div> -->
+          </a> -->
+        </div>
       </div>
       <div class="table-operator">
         <a-button type="primary" icon="plus" @click="createNewItem">新建</a-button>
@@ -67,31 +71,18 @@
       <a-table
         :columns="columns"
         :data-source="loadData"
-        :pagination="false"
         :rowSelection="{ selectedRowKeys: selectedRowKeys, onChange: onSelectChange }"
         :rowKey="record => record.id"
         @change="handleTableChange"
+              :pagination="pagination"
         alert="true"
       >
-        <a-table
-          slot="expandedRowRender"
-          slot-scope="record"
-          :columns="innerColumns"
-          :data-source="record.contact"
-          :pagination="false"
-          @change="handleTableChange"
-        >
-        </a-table>
         <span slot="latAndLng" slot-scope="text, record">
           {{ `(${record.lat},${record.lng})` }}
         </span>
-        <span slot="status" slot-scope="text">
-          {{ text == 0 ? '关闭' : '开启' }}
+        <span slot="sms" slot-scope="text, record">
+            <a-switch :defaultChecked="record.sms == 1 ? true:false" @change="contactChange($event, record)"/>
         </span>
-        <span slot="description" slot-scope="text">
-          <ellipsis :length="4" tooltip>{{ text }}</ellipsis>
-        </span>
-
         <span slot="action" slot-scope="text, record">
           <template>
             <a @click="handleEdit(record)">详情</a>
@@ -112,32 +103,38 @@
 </template>
 
 <script>
-import { getModelList, delFence } from '@/api/electronic-api'
-import { getHarbour, delHarbour } from '@/api/systemManage-api'
+import { getArea, getAllHarbour, editSms, delArea } from '@/api/systemManage-api'
 import modelPop from './components/modelPop'
 const columns = [
+      {
+    title: '区域名称',
+    align: 'center',
+    dataIndex: 'name'
+  },
   {
     title: '港口名称',
     align: 'center',
-    dataIndex: 'name',
-    scopedSlots: { customRender: 'name' }
+    dataIndex: 'harbour',
+    scopedSlots: { customRender: 'harbour' }
   },
+
   {
-    title: '港口地址',
+    title: '区域范围',
+    dataIndex: 'range',
     align: 'center',
-    dataIndex: 'address'
+    scopedSlots: { customRender: 'range' }
   },
-  {
-    title: '主管部门',
-    dataIndex: 'department',
-    align: 'center',
-    scopedSlots: { customRender: 'department' }
-  },
-  {
+    {
     title: '经纬度',
     dataIndex: 'latAndLng',
     align: 'center',
     scopedSlots: { customRender: 'latAndLng' }
+  },
+      {
+    title: '短信通知',
+    dataIndex: 'sms',
+    align: 'center',
+    scopedSlots: { customRender: 'sms' }
   },
   {
     title: '操作',
@@ -147,25 +144,12 @@ const columns = [
     scopedSlots: { customRender: 'action' }
   }
 ]
-const innerColumns = [
-  {
-    title: '联系人',
-    align: 'center',
-    dataIndex: 'name'
-  },
-    {
-    title: '联系电话',
-    align: 'center',
-    dataIndex: 'phone'
-  }
-]
 export default {
     components: {
 modelPop
     },
   data () {
     this.columns = columns
-    this.innerColumns = innerColumns
     return {
       status: 'all',
       advanced: false, // 高级搜索 展开/关闭
@@ -197,31 +181,6 @@ modelPop
         city: ''
       },
       levelList: [
-        {
-          value: 'Ⅰ级',
-          name: 'Ⅰ级',
-          id: 1
-        },
-        {
-          value: 'Ⅱ级',
-          name: 'Ⅱ级',
-          id: 2
-        },
-        {
-          value: 'Ⅲ级',
-          name: 'Ⅲ级',
-          id: 3
-        },
-        {
-          value: 'Ⅳ级',
-          name: 'Ⅳ级',
-          id: 4
-        },
-        {
-          value: 'Ⅴ级',
-          name: 'Ⅴ级',
-          id: 5
-        }
       ], // 预警等级集合
       selectedRowKeys: [],
       cascaderList: [], // 主管部门集合
@@ -250,7 +209,7 @@ modelPop
         okText: '是',
         cancelText: '否',
         onOk () {
-          delHarbour({
+          delArea({
             id: _this.selectedRowKeys
           }).then(res => {
             if (res.status === 200) {
@@ -286,7 +245,7 @@ modelPop
         okText: '是',
         cancelText: '否',
         onOk () {
-          delHarbour({
+          delArea({
             id: [record.id]
           }).then(res => {
             if (res.status === 200) {
@@ -308,10 +267,16 @@ modelPop
     // 获取基础列表信息
     getBaseContent () {
       const _this = this
-      getHarbour({
+      getArea({
+          harbour: this.level,
+          limit: 10,
+          page: this.queryParam.page
       }).then(res => {
         if (res.status === 200) {
-           this.loadData = res.data
+        this.pagination.total = res.data.count
+        this.queryParam.page = res.data.page
+        this.pagination.current = res.data.page
+           this.loadData = res.data.data
         } else {
             this.$message.warning(res.message)
         }
@@ -356,9 +321,26 @@ modelPop
       this.mediaSms = undefined
       this.level = undefined
       this.getBaseContent()
+    },
+    getHarbourList () {
+        getAllHarbour().then((res) => {
+            this.levelList = res.data
+        })
+    },
+        // 联络人设置
+    contactChange (checked, record) {
+      editSms({
+        id: record.id,
+        sms: checked ? '1' : '0'
+      }).then((res) => {
+        if (res.status === 200) {
+          this.$message.success('设置成功')
+        }
+      })
     }
   },
   mounted () {
+    this.getHarbourList()
     this.getBaseContent()
   }
 }

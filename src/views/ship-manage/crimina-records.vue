@@ -3,14 +3,8 @@
     <a-card :bordered="false" class="ant-pro-components-tag-select">
       <div class="nav-box">
         <div class="input-list">
-          <div class="input-item">
+          <!-- <div class="input-item">
             <span class="input-title">主管部门：</span>
-            <!-- <a-select style="width: 100%" placeholder="请选择" default-value="0">
-              <a-select-option value="0">全部</a-select-option>
-              <a-select-option value="1">关闭</a-select-option>
-              <a-select-option value="2">运行中</a-select-option>
-            </a-select> -->
-            <!-- <a-cascader :options="cascaderList" ref="dep" placeholder="请选择" @change="casChange" style="width: 100%" /> -->
             <a-tree-select
               v-model="depId"
               style="width: 100%"
@@ -26,38 +20,42 @@
                 </a-tree-select-node>
               </a-tree-select-node>
             </a-tree-select>
-          </div>
-          <div class="input-item">
+          </div> -->
+          <!-- <div class="input-item">
             <span class="input-title">船舶信息：</span>
             <a-input v-model="inputDetail" placeholder="请输入ID/船名" />
-          </div>
-          <template v-if="advanced">
+          </div> -->
+          <template>
             <div class="input-item">
               <span class="input-title">船员信息：</span>
               <a-input v-model="shipPeopleDetail" placeholder="请输入船主/船管姓名/手机号" />
             </div>
             <div class="input-item">
-              <span class="input-title">离港时间：</span>
-              <a-date-picker v-model="departure_time" @change="departureTimeChange" style="width: 100%" placeholder="请选择" />
+              <span class="input-title">开始时间：</span>
+              <a-date-picker v-model="startTime" @change="departureTimeChange" style="width: 100%" placeholder="请选择" />
+            </div>
+            <div class="input-item">
+              <span class="input-title">结束时间：</span>
+              <a-date-picker v-model="endTime" @change="endTimeChange" style="width: 100%" placeholder="请选择" />
             </div>
           </template>
         </div>
         <div class="btn-list">
           <a-button type="primary" style="margin-right: 10px" @click="searchBaseContent">查询</a-button>
           <a-button @click="reset">重置</a-button>
-          <a @click="toggleAdvanced" style="margin-left: 8px">
+          <!-- <a @click="toggleAdvanced" style="margin-left: 8px">
             {{ advanced ? '收起' : '展开' }}
             <a-icon :type="advanced ? 'up' : 'down'" />
-          </a>
+          </a> -->
         </div>
       </div>
       <div class="table-operator">
         <!-- <download-excel :data="exportList" :fields="exportFields" name="filename.xls" >
         </download-excel> -->
-          <a-button type="primary" icon="download" @click="exportData">导出</a-button>
+        <!-- <a-button type="primary" icon="download" @click="exportData">导出</a-button> -->
         <!-- <a-button @click="handleAdd">打印</a-button> -->
       </div>
-            <!-- <div class="top-bg">
+      <!-- <div class="top-bg">
         <template>
           {{ `已选中 ${selectedRowKeys.length} ` }}
         </template>
@@ -92,7 +90,7 @@
 </template>
 
 <script>
-import { getReportedInfo, getAllDep, exportExcel } from '@/api/ship-api'
+import { getCriminaList, getAllDep, exportExcel } from '@/api/ship-api'
 const columns = [
   {
     title: 'ID',
@@ -126,7 +124,7 @@ const columns = [
     sorter: false
   },
   {
-    title: '离港时间',
+    title: '违停时间',
     align: 'center',
     dataIndex: 'departure_time',
     sorter: false
@@ -150,21 +148,21 @@ const innerColumns = [
     align: 'center',
     dataIndex: 'longitude'
   },
-  {
-    title: '航向',
-    align: 'center',
-    dataIndex: 'course'
-  },
-  {
-    title: '航速',
-    align: 'center',
-    dataIndex: 'speed'
-  },
     {
     title: '电量',
     align: 'center',
     dataIndex: 'electricity'
   }
+//   {
+//     title: '',
+//     align: 'center',
+//     dataIndex: 'course'
+//   },
+//   {
+//     title: '航速',
+//     align: 'center',
+//     dataIndex: 'speed'
+//   }
 ]
 export default {
   data () {
@@ -207,7 +205,9 @@ export default {
         '电话': 'owner_phone',
         '离港时间': 'departure_time'
       },
-      exportList: []
+      exportList: [],
+      startTime: '',
+      endTime: ''
     }
   },
   computed: {
@@ -238,12 +238,11 @@ export default {
     // 获取基础信息
     getBaseContent () {
       const _this = this
-      getReportedInfo({
+      getCriminaList({
         page: this.queryParam.page,
-        department: _this.depId,
-        owner: _this.shipPeopleDetail,
-        info: _this.inputDetail,
-        departure_time: _this.departure_time,
+        info: _this.shipPeopleDetail,
+        start: _this.startTime,
+        end: _this.endTime,
         limit: 10
       }).then((res) => {
         this.pagination.total = res.data.count
@@ -253,7 +252,6 @@ export default {
           res.data.data[n].baseInfo = []
           res.data.data[n].baseInfo.push({ longitude: res.data.data[n].longitude,
           latitude: res.data.data[n].latitude,
-          electricity: res.data.data[n].electricity,
           speed: res.data.data[n].speed + 'km/h',
           course: res.data.data[n].course + '°' })
           // res.data.data[n].baseInfo.speed = res.data.data[n].speed
@@ -286,16 +284,22 @@ export default {
     casChange (value) {
       this.depId = value.slice(-1)[0]
     },
-    // 上船时间选择
+    // 开始时间选择
     departureTimeChange (date, dateString) {
-      this.departure_time = dateString
+      this.startTime = dateString
+    },
+    // 开始时间选择
+    endTimeChange (date, dateString) {
+      this.endTime = dateString
     },
     // 重置
     reset () {
       this.inputDetail = ''
-      this.departure_time = null
+      this.startTime = null
+      this.endTime = null
       this.shipPeopleDetail = ''
       this.depId = undefined
+      this.getBaseContent()
     }
   },
   mounted () {
